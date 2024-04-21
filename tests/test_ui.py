@@ -18,7 +18,7 @@ class TestInterface(BaseClass):
                     AssertionError: If the expected movie is not found as the last entry in the sorted list.
                 """
         homepage = HomePage(self.driver)
-        home_data = self.scrape_table_data(homepage.thead_locator, homepage.tbody_locator)
+        home_data = self.soup_scrape(parent_header_tag="thead", parent_body_tag="tbody", header_tag="th", row_tag="tr", cell_tag="td",equal_length_column = True)
         sorted_home_data = home_data.sort_values(by="Title")
         assert sorted_home_data.iloc[-1]["Title"] == "The Phantom Menace"
         print("Movie at row index -1 = The Phantom Menace")
@@ -40,9 +40,7 @@ class TestInterface(BaseClass):
         homepage = HomePage(self.driver)
         view_movie = homepage.select_movie("The Empire Strikes Back")
         self.scroll_into_view(view_movie.layout_class)
-        ser = view_movie.get_movie_info()
-        movie_data = view_movie.split_series_by_labels(ser)
-        movie_data.index = movie_data.index+1
+        movie_data = self.soup_scrape(parent_header_tag="main", parent_body_tag="main", header_tag="h1", row_tag="ul", cell_tag="li", equal_length_column = False)
         assert "Wookie" in movie_data["Species"].values, "Wookie species should be in the movie's species."
         print("Wookie is listed in Species information")
         print(movie_data)
@@ -62,11 +60,9 @@ class TestInterface(BaseClass):
         homepage = HomePage(self.driver)
         view_movie = homepage.select_movie("The Phantom Menace")
         self.scroll_into_view(view_movie.layout_class)
-        ser = view_movie.get_movie_info()
-        movie_data = view_movie.split_series_by_labels(ser)
+        movie_data = self.soup_scrape(parent_header_tag="main", parent_body_tag="main", header_tag="h1", row_tag="ul", cell_tag="li", equal_length_column = False)
         assert "Camino" not in movie_data["Planets"].values, "Camino should not be listed under planets for this movie"
         movie_data.index = movie_data.index + 1
         print("Camino is not listed as a planet for this movie")
         print(movie_data)
-
 

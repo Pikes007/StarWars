@@ -14,42 +14,6 @@ from tests.conftest import BASE_URI
 @pytest.mark.usefixtures("setup")
 class BaseClass:
 
-    def scrape_table_data(self, headers_locator, body_locator, header_tag='th', row_tag='tr', cell_tag='td'):
-        """
-                Scrape data from an HTML table on the current page.
-
-                Args:
-                    headers_locator (tuple): Locator for the table headers.
-                    body_locator (tuple): Locator for the table body.
-                    header_tag (str, optional): HTML tag for table headers (default is 'th').
-                    row_tag (str, optional): HTML tag for table rows (default is 'tr').
-                    cell_tag (str, optional): HTML tag for table cells (default is 'td').
-
-                Returns:
-                    pd.DataFrame: A pandas DataFrame containing the scraped table data.
-                """
-        headers_elem = WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located(headers_locator)
-        )
-        soup = BeautifulSoup(self.driver.page_source, 'html.parser')
-        table_data = []
-        headers = [i.text.strip() for i in soup.find(headers_locator).find_all(header_tag)]
-
-        body_elem = WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located(body_locator)
-        )
-
-        for row in soup.find(body_locator).find_all(row_tag):
-            columns = row.find_all(cell_tag)
-            row_data = {}
-            for idx, column in enumerate(columns):
-                row_data[headers[idx]] = column.text.strip()
-            table_data.append(row_data)
-
-        df = pd.DataFrame(table_data)
-        df.index = df.index + 1
-        return df
-
     def click_element_by_text(self, text):
         """
                 Click on an element identified by its visible text.
@@ -87,3 +51,44 @@ class BaseClass:
         data = json.loads(response.text)
         assert response.status_code == 200, f"Expected status code, but received {response.status_code}"
         return data
+
+    def soup_scrape(self, parent_header_tag=None, parent_body_tag=None, header_tag=None, row_tag=None,
+                    cell_tag=None,
+                    equal_length_column=False):
+        """
+            Scrape data from a webpage using BeautifulSoup.
+
+            Args:
+                parent_header_tag (str, optional): Tag name of the parent element containing the header.
+                parent_body_tag (str, optional): Tag name of the parent element containing the body.
+                header_tag (str, optional): Tag name of individual header elements.
+                row_tag (str, optional): Tag name of individual row elements.
+                cell_tag (str, optional): Tag name of individual cell elements.
+                equal_length_column (bool, optional): If True, create DataFrame directly from body data.
+
+            Returns:
+                pandas.DataFrame: DataFrame containing scraped data. If drop_down_level is False (default),
+                DataFrame has headers as columns and body data as rows. If drop_down_level is True,
+                DataFrame uses body data directly with headers as columns.
+
+            Raises:
+                TimeoutException: If the specified header element is not found within the timeout (10 seconds).
+            """
+        WebDriverWait(self.driver, 10).until(
+            EC.presence_of_element_located((By.TAG_NAME, header_tag))
+        )
+        soup = BeautifulSoup(self.driver.page_source, 'html.parser')
+
+        headers = [i.text.strip() for i in soup.find(parent_header_tag).find_all(header_tag)]
+        bodies = [
+            [cell.text.strip() for cell in row.find_all(cell_tag)]
+            for row in soup.find(parent_body_tag).find_all(row_tag)
+        ]
+        if equal_length_column:
+            df = pd.DataFrame(bodies, columns=headers)
+        else:
+            data_dict = {header: body for header, body in zip(headers, bodies)}
+            df = pd.DataFrame.from_dict(data_dict, orient="index").transpose()
+
+        df.index = df.index + 1
+        return df
