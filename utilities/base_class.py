@@ -67,9 +67,7 @@ class BaseClass:
                 equal_length_column (bool, optional): If True, create DataFrame directly from body data.
 
             Returns:
-                pandas.DataFrame: DataFrame containing scraped data. If drop_down_level is False (default),
-                DataFrame has headers as columns and body data as rows. If drop_down_level is True,
-                DataFrame uses body data directly with headers as columns.
+                pandas.DataFrame: DataFrame containing scraped data.
 
             Raises:
                 TimeoutException: If the specified header element is not found within the timeout (10 seconds).
