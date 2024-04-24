@@ -62,7 +62,6 @@ class TestInterface(BaseClass):
         self.scroll_into_view(view_movie.layout_class)
         movie_data = self.soup_scrape(parent_header_tag="main", parent_body_tag="main", header_tag="h1", row_tag="ul", cell_tag="li", equal_length_column = False)
         assert "Camino" not in movie_data["Planets"].values, "Camino should not be listed under planets for this movie"
-        movie_data.index = movie_data.index + 1
         print("Camino is not listed as a planet for this movie")
         print(movie_data)
 

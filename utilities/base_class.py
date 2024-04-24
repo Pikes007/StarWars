@@ -47,14 +47,14 @@ class BaseClass:
                 Returns:
                     dict: JSON response containing movie search results.
                 """
-        response = self.api_session.get(BASE_URI + f"films")
+        response = self.api_session.get(BASE_URI + f"films", verify=False)
         data = json.loads(response.text)
         assert response.status_code == 200, f"Expected status code, but received {response.status_code}"
         return data
 
     def soup_scrape(self, parent_header_tag=None, parent_body_tag=None, header_tag=None, row_tag=None,
                     cell_tag=None,
-                    equal_length_column=False):
+                    equal_length_column=True):
         """
             Scrape data from a webpage using BeautifulSoup.
 
@@ -84,9 +84,11 @@ class BaseClass:
         ]
         if equal_length_column:
             df = pd.DataFrame(bodies, columns=headers)
+
         else:
             data_dict = {header: body for header, body in zip(headers, bodies)}
             df = pd.DataFrame.from_dict(data_dict, orient="index").transpose()
 
-        df.index = df.index + 1
+        df.index = range(1, len(df) + 1)
+
         return df
